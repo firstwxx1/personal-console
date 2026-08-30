@@ -1,0 +1,124 @@
+name: Deploy personal-console
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: personal-console-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_DIR: /home/ubuntu/apps/personal-console
+  SERVICE_NAME: personal-console.service
+  NODE_VERSION: '22'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Create deployment archive
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # The archive is made from the checkout and excludes runtime data and credentials.
+          tar \
+            --exclude='./.git' \
+            --exclude='./.env.local' \
+            --exclude='./node_modules' \
+            --exclude='./.next' \
+            --exclude='./.github' \
+            -czf "$RUNNER_TEMP/personal-console-${GITHUB_SHA}.tar.gz" \
+            .
+
+      - name: Configure SSH known hosts
+        shell: bash
+        env:
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$VPS_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Upload deployment archive
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+          printf '%s\n' "$VPS_SSH_KEY" > "$RUNNER_TEMP/vps_key"
+          chmod 600 "$RUNNER_TEMP/vps_key"
+          scp -i "$RUNNER_TEMP/vps_key" \
+            -P "${VPS_PORT:-22}" \
+            "$RUNNER_TEMP/personal-console-${GITHUB_SHA}.tar.gz" \
+            "$VPS_USER@$VPS_HOST:/tmp/personal-console-${GITHUB_SHA}.tar.gz"
+
+      - name: Install, build, and activate on VPS
+        shell: bash
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -Eeuo pipefail
+          printf '%s\n' "$VPS_SSH_KEY" > "$RUNNER_TEMP/vps_key"
+          chmod 600 "$RUNNER_TEMP/vps_key"
+
+          ssh -i "$RUNNER_TEMP/vps_key" \
+            -p "${VPS_PORT:-22}" \
+            "$VPS_USER@$VPS_HOST" \
+            "GITHUB_SHA='$GITHUB_SHA' PROJECT_DIR='$PROJECT_DIR' SERVICE_NAME='$SERVICE_NAME' bash -s" <<'REMOTE_SCRIPT'
+          set -Eeuo pipefail
+
+          archive="/tmp/personal-console-${GITHUB_SHA}.tar.gz"
+          release_dir="$PROJECT_DIR/.deploy/releases/$GITHUB_SHA"
+          mkdir -p "$release_dir"
+
+          # Build in an isolated release directory. A failed install/build exits before
+          # the live directory is changed and before systemd is touched.
+          tar -xzf "$archive" -C "$release_dir"
+          if [ -f "$PROJECT_DIR/.env.local" ]; then
+            cp -p "$PROJECT_DIR/.env.local" "$release_dir/.env.local"
+          fi
+
+          cd "$release_dir"
+          npm ci
+          npm run build
+
+          # Keep the server-owned environment file and deployment history intact.
+          rsync -a --delete \
+            --exclude='.env.local' \
+            --exclude='.deploy/' \
+            "$release_dir/" "$PROJECT_DIR/"
+
+          systemctl restart "$SERVICE_NAME"
+          systemctl is-active --quiet "$SERVICE_NAME"
+
+          rm -f "$archive"
+          find "$PROJECT_DIR/.deploy/releases" -mindepth 1 -maxdepth 1 -type d \
+            -printf '%T@ %p\n' | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
+          REMOTE_SCRIPT
