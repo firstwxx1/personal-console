@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Activity,
   Bot,
@@ -12,8 +14,9 @@ import {
   Video
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { SectionPanel } from "@/components/dashboard/section-panel";
-import { serviceCategories, serviceSites, type ServiceIcon } from "@/data/services";
+import { serviceCategories, type ServiceIcon, type ServiceSite } from "@/data/services";
 
 const iconMap: Record<ServiceIcon, LucideIcon> = {
   github: Github,
@@ -31,14 +34,28 @@ const iconMap: Record<ServiceIcon, LucideIcon> = {
 };
 
 export function QuickAccess() {
+  const [sites, setSites] = useState<ServiceSite[]>([]);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/services", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("load");
+        setSites(await response.json() as ServiceSite[]);
+      })
+      .catch(() => setLoadError("快捷访问加载失败，请稍后重试。"));
+  }, []);
+
   return (
     <SectionPanel title="快捷访问" actionLabel="管理网站" actionHref="/services">
       <div className="space-y-4 p-4">
+        {loadError ? <p className="text-sm text-danger">{loadError}</p> : null}
+        {!loadError && sites.length === 0 ? <p className="text-sm text-muted-foreground">还没有快捷网站，点击“管理网站”添加。</p> : null}
         {serviceCategories.map((category) => {
-          const sites = serviceSites.filter(
+          const categorySites = sites.filter(
             (site) => site.category === category
           );
-          if (sites.length === 0) return null;
+          if (categorySites.length === 0) return null;
 
           return (
             <section key={category}>
@@ -46,7 +63,7 @@ export function QuickAccess() {
                 {category}
               </h3>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2">
-                {sites.map((site) => {
+                {categorySites.map((site) => {
                   const Icon = iconMap[site.icon];
                   return (
                     <a

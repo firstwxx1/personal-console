@@ -1,0 +1,6 @@
+import { Bell } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { cn } from "@/lib/utils";
+export type NotificationState = Record<string, boolean>;
+const items = ["系统通知", "VPS 状态异常", "项目状态异常", "监控告警"];
+export function NotificationSettings({ state, onChange }: { state: NotificationState; onChange: (state: NotificationState) => void }) { return <Card><CardHeader><CardTitle>通知</CardTitle><CardDescription>选择需要在控制台中提醒你的事件。</CardDescription></CardHeader><CardContent className="divide-y divide-border p-0">{items.map((item) => <div key={item} className="flex items-center justify-between gap-4 px-4 py-3"><div className="flex items-center gap-2.5"><Bell className="h-4 w-4 text-muted-foreground" aria-hidden="true" /><span className="text-sm">{item}</span></div><button type="button" role="switch" aria-label={item} aria-checked={state[item]} onClick={() => onChange({ ...state, [item]: !state[item] })} className={cn("relative h-6 w-11 rounded-full border transition-colors", state[item] ? "border-primary bg-primary" : "border-input bg-muted")}><span className={cn("absolute top-0.5 h-4.5 w-4.5 rounded-full bg-white transition-transform", state[item] ? "translate-x-5" : "translate-x-0.5")} /></button></div>)}</CardContent></Card>; }

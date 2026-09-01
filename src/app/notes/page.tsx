@@ -1,6 +1,6 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { NotesList } from "@/components/notes/notes-list";
 
-export default function Page() {
-  return <PagePlaceholder title="笔记文档" description="笔记列表和阅读体验将在第七阶段开发。" />;
+export default function NotesPage() {
+  return <NotesList />;
 }
 

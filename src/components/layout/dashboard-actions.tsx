@@ -5,12 +5,16 @@ import { Button } from "@/components/ui";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export function DashboardActions() {
+  const openSearch = () => window.dispatchEvent(new Event("personal-console:open-search"));
+
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <button
         type="button"
         className="flex h-9 min-w-9 items-center gap-2 rounded-md border border-border bg-card px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:border-input hover:text-foreground"
         aria-label="全局搜索"
+        title="全局搜索"
+        onClick={openSearch}
       >
         <Search className="h-4 w-4" />
         <span className="hidden lg:inline">搜索</span>

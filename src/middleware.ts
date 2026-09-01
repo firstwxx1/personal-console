@@ -1,0 +1,4 @@
+import { NextRequest, NextResponse } from "next/server";
+import { AUTH_COOKIE, verifyToken } from "@/lib/auth";
+export async function middleware(request: NextRequest) { const path = request.nextUrl.pathname; if (path === "/login" || path.startsWith("/api/auth") || path === "/monitoring" || path.startsWith("/api/monitoring") || path.startsWith("/_next/") || path === "/favicon.ico") return NextResponse.next(); if (await verifyToken(request.cookies.get(AUTH_COOKIE)?.value)) return NextResponse.next(); const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host") || request.nextUrl.host; const forwardedProto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", ""); const url = new URL("/login", `${forwardedProto}://${forwardedHost}`); url.searchParams.set("from", path); return NextResponse.redirect(url); }
+export const config = { matcher: ["/((?!_next/static|_next/image).*)"] };

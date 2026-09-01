@@ -1,43 +1,12 @@
-export interface Note {
-  slug: string;
-  title: string;
-  description: string;
-  category: string;
-  tags: string[];
-  updatedAt: string;
-}
-
+export const noteCategories = ["教程", "VPS", "开发", "交易", "随笔", "其他"] as const;
+export type NoteCategory = (typeof noteCategories)[number];
+export interface Note { id: string; slug: string; title: string; excerpt: string; description: string; category: NoteCategory; tags: string[]; content: string; createdAt: string; updatedAt: string; }
 export const notes: Note[] = [
-  {
-    slug: "deploy-openclaw",
-    title: "如何部署 OpenClaw",
-    description: "记录环境准备、端口规划和进程守护配置。",
-    category: "教程",
-    tags: ["OpenClaw", "部署"],
-    updatedAt: "2 小时前"
-  },
-  {
-    slug: "vps-security-checklist",
-    title: "VPS 安全设置记录",
-    description: "防火墙、密钥登录和基础安全加固清单。",
-    category: "VPS",
-    tags: ["安全", "VPS"],
-    updatedAt: "1 天前"
-  },
-  {
-    slug: "mt5-ea-strategy",
-    title: "MT5 EA 策略开发笔记",
-    description: "策略参数、回测流程和风险控制记录。",
-    category: "交易",
-    tags: ["MT5", "EA"],
-    updatedAt: "3 天前"
-  },
-  {
-    slug: "3x-ui-guide",
-    title: "3X-UI 使用教程",
-    description: "节点配置、证书更新和常见问题处理。",
-    category: "VPS",
-    tags: ["3X-UI", "代理"],
-    updatedAt: "5 天前"
-  }
+  { id: "note-001", slug: "deploy-openclaw", title: "如何部署 OpenClaw", excerpt: "从环境准备到进程守护，整理一套可复用的部署流程。", description: "记录环境准备、端口规划和进程守护配置。", category: "教程", tags: ["OpenClaw", "部署"], createdAt: "2026-08-20", updatedAt: "2026-08-29", content: "## 环境准备\n\n先确认 Node.js 与 Git 已安装，并为服务准备独立目录。\n\n```bash\nsudo mkdir -p /opt/openclaw\ncd /opt/openclaw\ngit clone https://github.com/example/openclaw.git .\n```\n\n> 生产环境请固定依赖版本，并在变更前保留可回滚的提交。\n\n### 启动服务\n\n使用 systemd 或 pm2 守护进程，日志统一输出到 journald。\n\n- 配置监听端口\n- 设置健康检查\n- 验证重启策略\n\n更多背景可参考 [Node.js 文档](https://nodejs.org/docs/latest/api/)。\n\n![部署拓扑示意](https://images.example.com/openclaw-topology.png)" },
+  { id: "note-002", slug: "vps-security-checklist", title: "VPS 安全设置记录", excerpt: "把新 VPS 的基础加固步骤整理成一份可执行清单。", description: "防火墙、密钥登录和基础安全加固清单。", category: "VPS", tags: ["安全", "VPS"], createdAt: "2026-08-18", updatedAt: "2026-08-28", content: "## 加固清单\n\n新服务器上线后，先更新系统并创建普通运维用户。\n\n- 关闭密码登录\n- 仅开放必要端口\n- 启用自动安全更新\n- 定期检查登录日志\n\n```bash\nsudo ufw allow 22/tcp\nsudo ufw allow 443/tcp\nsudo ufw enable\n```\n\n> 防火墙规则变更后，务必保留当前 SSH 会话并开启第二个会话验证。" },
+  { id: "note-003", slug: "mt5-ea-strategy", title: "MT5 EA 策略开发笔记", excerpt: "记录策略参数、回测流程与风险控制的实践要点。", description: "策略参数、回测流程和风险控制记录。", category: "交易", tags: ["MT5", "EA"], createdAt: "2026-08-15", updatedAt: "2026-08-27", content: "## 策略结构\n\nEA 将信号、仓位和执行拆成三个模块，便于单独回测。\n\n### 风险控制\n\n单笔风险固定为账户权益的一小部分，连续亏损时自动降低仓位。\n\n```mql5\ndouble risk = AccountInfoDouble(ACCOUNT_EQUITY) * 0.005;\n```\n\n1. 先进行样本内回测\n2. 再进行样本外验证\n3. 最后用模拟账户观察滑点\n\n不要把历史收益当作未来承诺，相关规则见 [MQL5 文档](https://www.mql5.com/en/docs)。" },
+  { id: "note-004", slug: "3x-ui-guide", title: "3X-UI 使用教程", excerpt: "整理节点配置、证书更新和故障排查时常用的操作。", description: "节点配置、证书更新和常见问题处理。", category: "VPS", tags: ["3X-UI", "代理"], createdAt: "2026-08-10", updatedAt: "2026-08-25", content: "## 面板初始化\n\n首次登录后立即修改管理路径，并限制面板监听地址。\n\n- 创建独立节点\n- 配置传输参数\n- 绑定域名与证书\n\n```bash\n/usr/local/bin/x-ui settings\n/usr/local/bin/x-ui restart\n```\n\n证书续期可以交给 cron，续期后再重启面板使证书生效。" },
+  { id: "note-005", slug: "typescript-project-template", title: "TypeScript 项目模板整理", excerpt: "一个适合小型服务的目录结构与脚本约定。", description: "记录 TypeScript 项目的目录、脚本和质量检查约定。", category: "开发", tags: ["TypeScript", "工程化"], createdAt: "2026-08-05", updatedAt: "2026-08-23", content: "## 目录约定\n\n将业务代码放在 `src`，测试与源码同层，公共类型集中维护。\n\n```text\nsrc/\n  features/\n  lib/\n  types/\n```\n\n### 质量检查\n\n提交前运行类型检查、Lint 和单元测试，避免把格式问题留到 CI。" },
+  { id: "note-006", slug: "weekly-retrospective", title: "一周复盘：把工作变成系统", excerpt: "用简短复盘记录本周完成的事、阻塞点和下一步。", description: "通过固定模板回顾工作节奏与注意力分配。", category: "随笔", tags: ["复盘", "效率"], createdAt: "2026-08-01", updatedAt: "2026-08-22", content: "## 本周观察\n\n真正节省时间的不是更快地切换任务，而是减少没有明确出口的任务。\n\n### 下周行动\n\n- 每天只保留三个关键结果\n- 为中断安排固定时间\n- 把重复步骤写成清单\n\n> 复盘的目的不是责备过去，而是让下一次选择更容易。" },
+  { id: "note-007", slug: "useful-links", title: "常用资料与链接", excerpt: "收集长期会回看的官方文档和排障入口。", description: "把零散的参考资料归档，方便快速查找。", category: "其他", tags: ["资料", "索引"], createdAt: "2026-07-28", updatedAt: "2026-08-20", content: "## 官方入口\n\n优先保存项目官方文档，避免依赖过时的博客片段。\n\n- [Next.js 文档](https://nextjs.org/docs)\n- [Tailwind CSS 文档](https://tailwindcss.com/docs)\n- [MDN Web 文档](https://developer.mozilla.org/)\n\n### 归档方法\n\n每条链接附上一句用途说明，并在失效时及时替换。" },
 ];

@@ -1,5 +1,6 @@
+.env
 .env.local
-.env.*
+.env.*.local
 !.env.example
 
 node_modules/
@@ -19,3 +20,5 @@ Thumbs.db
 .vscode/
 .idea/
 next-env.d.ts
+
+.data/

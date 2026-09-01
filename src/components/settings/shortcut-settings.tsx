@@ -1,0 +1,3 @@
+import { Keyboard } from "lucide-react";
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+export function ShortcutSettings() { return <Card><CardHeader><CardTitle>快捷键</CardTitle><CardDescription>当前可用的控制台快捷键。</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between border-b border-border py-2.5"><span className="flex items-center gap-2 text-sm"><Keyboard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />全局搜索</span><Badge variant="neutral" className="font-mono">Ctrl + K</Badge></div><p className="mt-3 text-xs text-success">全局搜索快捷键已启用。</p></CardContent></Card>; }

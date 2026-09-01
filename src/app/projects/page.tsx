@@ -1,6 +1,6 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { ProjectsList } from "@/components/projects/projects-list";
 
-export default function Page() {
-  return <PagePlaceholder title="项目管理" description="项目列表、筛选和详情管理将在第四阶段开发。" />;
+export default function ProjectsPage() {
+  return <ProjectsList />;
 }
 

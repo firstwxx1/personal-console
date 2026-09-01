@@ -1,10 +1,12 @@
-import { PagePlaceholder } from "@/components/common/page-placeholder";
+import { notFound } from "next/navigation";
+import { NoteDetail } from "@/components/notes/note-detail";
+import { getNoteBySlug } from "@/lib/notes-db";
 
-export default function Page() {
-  return (
-    <PagePlaceholder
-      title="笔记详情"
-      description="长文阅读布局、目录和标签将在第七阶段开发。"
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function NotePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const note = getNoteBySlug(slug);
+  if (!note) notFound();
+  return <NoteDetail note={note} />;
 }

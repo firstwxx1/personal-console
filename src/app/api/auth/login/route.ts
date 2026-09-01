@@ -1,0 +1,3 @@
+import { NextResponse } from "next/server";
+import { AUTH_COOKIE, makeToken } from "@/lib/auth";
+export async function POST(request: Request) { const body = await request.json().catch(() => ({})) as { username?: unknown; password?: unknown }; if (body.username !== process.env.AUTH_USERNAME || body.password !== process.env.AUTH_PASSWORD) return NextResponse.json({ error: "账号或密码错误" }, { status: 401 }); const response = NextResponse.json({ ok: true }); response.cookies.set(AUTH_COOKIE, await makeToken(String(body.username)), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 7 }); return response; }

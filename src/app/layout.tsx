@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "个人控制台",
+  title: "云端控制台",
   description: "管理 VPS、项目、常用网站与技术笔记的个人控制台。"
 };
 

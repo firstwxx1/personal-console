@@ -1,0 +1,5 @@
+export const AUTH_COOKIE = "console_auth";
+async function signature(value: string) { const secret = new TextEncoder().encode(process.env.AUTH_SECRET || ""); const key = await crypto.subtle.importKey("raw", secret, { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]); return { key, bytes: new TextEncoder().encode(value) }; }
+export async function signAuth(value: string) { const { key, bytes } = await signature(value); const result = await crypto.subtle.sign("HMAC", key, bytes); return Array.from(new Uint8Array(result)).map((x) => x.toString(16).padStart(2, "0")).join(""); }
+export async function makeToken(username: string) { return `${username}.${await signAuth(username)}`; }
+export async function verifyToken(token: string | undefined) { if (!token) return false; const [username, encoded] = token.split("."); if (!username || !encoded || username !== process.env.AUTH_USERNAME) return false; const { key, bytes } = await signature(username); const signatureBytes = new Uint8Array(encoded.match(/.{2}/g)?.map((x) => parseInt(x, 16)) || []); return crypto.subtle.verify("HMAC", key, signatureBytes, bytes); }
